@@ -46,49 +46,120 @@ def cargar_datos():
 # Cargar los datos al iniciar
 inventario = cargar_datos()
 
-#Cambiar de pantallas 
-def cambiar_vista(vista_activa):
-    estados=["inicio","categorias","proveedores","bodega","ventas","conclusiones"]
-    for estado in estados:
-        st.session_state[estado] = (estado == vista_activa)
-#Titulo del proyecto y descripción
-if "inicio" not in st.session_state:
-    st.session_state.inicio = True
-def inicio():
-    cambiar_vista("inicio")
-if st.session_state.inicio:
-    st.title("Inventario de la bodega")
-    st.markdown("Proyecto de ciencia de datos para analizar un datased con el inventario actual de una bodega, con el objetivo de analizar tendencias, patrones y posibles problemas en la gestión del inventario.")
-    st.image(imagen1, caption="Bodega", width="stretch")
+# 3. Gestión de estados (Navegación)
+if "vista" not in st.session_state:
+    st.session_state.vista = "inicio"
 
-#Contenidos de las paginas 
+def cambiar_vista(nueva_vista):
+    st.session_state.vista = nueva_vista
 
-if "categorias" not in st.session_state:
-    st.session_state.por_categoria=False
-def categoria():
-    cambiar_vista("categorias")  
-     
-if st.session_state.por_categoria:
-    #with st.container():
-        st.subheader("Productos disponibles por categoría")
-        st.selectbox("Seleccione la categoría de productos deseada",options=inventario["Category"].unique(), key="categoria_seleccionada")
-        #fig = go.Figure()
-        #fig.add_trace(go.Bar(x=inventario["Product_Name"].value_counts().index, y=inventario["Quantity_On_Hand "].value_counts().values))
-        #fig.update_layout(title="Cantidad de productos por categoría", xaxis_title="Categoría", yaxis_title="Cantidad de productos")
-        #st.plotly_chart(fig)
-        
-        
- #Barra de navegación 
- 
-sidebar=st.sidebar
-with sidebar:
-        st.title("Navegación")
-        st.button("Inicio", on_click=inicio)
-        st.button("Categorías", on_click=categoria)
-        st.button("Proveedores")
-        st.button("Bodega")
-        st.button("Ventas")
-        st.button("Conclusiones")       
-        
-        
-print("Hello world")    
+# 4. Lógica de las páginas
+if st.session_state.vista == "inicio":
+    st.title("Inventario de la bodega", anchor="center")
+    st.markdown("Proyecto de ciencia de datos para analizar tendencias y gestión de inventario, con el objetivo de optimizar la rotación de productos y mejorar la eficiencia operativa.")
+    st.image("Bodega.jpg", width="stretch")
+
+elif st.session_state.vista == "categorias":
+    st.subheader("Productos disponibles por categoría")
+    
+    # Filtro funcional
+    cat_seleccionada = st.selectbox("Seleccione la categoría", options=inventario["Category"].unique())
+    df_filtrado = inventario[inventario["Category"] == cat_seleccionada]
+    
+    # Gráfica corregida
+    fig = go.Figure()
+    # Usamos el dataframe filtrado para que la gráfica cambie según el selectbox
+    fig.add_trace(go.Bar(
+        x=df_filtrado["Product_Name"], 
+        y=df_filtrado["Quantity_On_Hand"] # Verifica si lleva espacio o no
+    ))
+    
+    fig.update_layout(title=f"Stock en {cat_seleccionada}", xaxis_title="Producto", yaxis_title="Cantidad")
+    st.plotly_chart(fig)
+
+elif st.session_state.vista == "ventas":
+    st.subheader("Análisis de ventas por ubicación")
+    ubi_seleccionada = st.selectbox("Seleccione la ubicación", options=inventario["Warehouse_Location"].unique())
+    df_filtrado_ubi = inventario[inventario["Warehouse_Location"] == ubi_seleccionada]
+
+    fig = go.Figure()
+    fig.add_trace(go.Bar(
+        x=df_filtrado_ubi["Avg_Daily_Sales"], 
+        y=df_filtrado_ubi["Category"],
+        orientation="h"
+    ))
+    fig.update_layout(title=f"Ventas diarias promedio en {ubi_seleccionada}", xaxis_title="Ventas Diarias Promedio", yaxis_title="Categoría")
+    st.plotly_chart(fig)
+    
+    #Grafica de distribución de inventario por categoria
+    
+    fig = go.Figure()
+    fig.add_trace(go.Pie(
+        labels=df_filtrado_ubi["Category"], 
+        values=df_filtrado_ubi["Quantity_On_Hand"],
+        hole=0.4
+    ))
+    fig.update_layout(title=f"Distribución de inventario en {ubi_seleccionada}", xaxis_title="Categoría", yaxis_title="Cantidad")
+    st.plotly_chart(fig)
+
+elif st.session_state.vista == "analisis":
+    st.subheader("Análisis de rotación de inventario")
+    cat_seleccionada_analisis = st.selectbox("Seleccione la categoría para análisis", options=inventario["Category"].unique())
+    bodega_seleccionada_analisis = st.selectbox("Seleccione la ubicación para análisis", options=inventario["Warehouse_Location"].unique())
+    df_filtrado_analisis = inventario[(inventario["Category"] == cat_seleccionada_analisis) & (inventario["Warehouse_Location"] == bodega_seleccionada_analisis)]
+    
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(
+        x=df_filtrado_analisis["Days_of_Inventory"], 
+        y=df_filtrado_analisis["Avg_Daily_Sales"],
+        mode="markers",
+        text=inventario["Product_Name"]
+    ))
+    fig.update_layout(title="Rotación de Inventario vs Ventas Diarias Promedio", xaxis_title="Días de Inventario", yaxis_title="Ventas Diarias Promedio")
+    st.plotly_chart(fig)
+
+elif st.session_state.vista =="proveedores":
+    st.subheader("Tiempos de entrega por proveedor")
+    ubi_seleccionada=st.selectbox("Seleccione ubicación para análisis", options=inventario["Warehouse_Location"].unique())
+    df_filtrado_proveedores = inventario[inventario["Warehouse_Location"] == ubi_seleccionada]
+    fig = go.Figure()
+    fig.add_trace(go.Bar(
+        x=df_filtrado_proveedores["Supplier_Name"], 
+        y=df_filtrado_proveedores["Lead_Time_Days"]
+    ))
+    fig.update_layout(title=f"Tiempos de entrega en {ubi_seleccionada}", xaxis_title="Proveedor", yaxis_title="Días de entrega")
+    st.plotly_chart(fig)
+
+elif st.session_state.vista == "bodega":
+    st.subheader("Tabla de gestión de la bodega")
+
+    ubicaciones_sel = st.selectbox(
+        "Seleccione la ubicación de la bodega:", 
+        options=inventario["Warehouse_Location"].unique())
+    categorias_sel = st.selectbox(
+        "Seleccione las categorías:", 
+        options=inventario["Category"].unique())
+    df_filtrado_bodega = inventario[
+        (inventario["Warehouse_Location"] == ubicaciones_sel) & 
+        (inventario["Category"] == categorias_sel)
+    ]
+    st.dataframe(df_filtrado_bodega[["Product_Name", "Category", "Quantity_On_Hand", "Days_of_Inventory", "Inventory_Status","%_Variance_Audit"]])
+    
+    #Gestion del inventario en bodega
+    st.subheader("Auditoria de inventario")
+    variacion_promedio=df_filtrado_bodega["%_Variance_Audit"].mean()
+    col1, col2 = st.columns(2)
+    with col1:
+        st.metric("Variación promedio de auditoría", 
+                  value=f"{variacion_promedio:.2f}%",
+                  delta=f"{variacion_promedio:.2f}%",
+        )
+# 5. Barra lateral
+with st.sidebar:
+    st.title("Navegación")
+    st.button("Inicio", on_click=cambiar_vista, args=("inicio",))
+    st.button("Categorías", on_click=cambiar_vista, args=("categorias",))
+    st.button("Ventas", on_click=cambiar_vista, args=("ventas",))
+    st.button("Análisis", on_click=cambiar_vista, args=("analisis",))
+    st.button("Proveedores", on_click=cambiar_vista, args=("proveedores",))
+    st.button("Bodega", on_click=cambiar_vista, args=("bodega",))

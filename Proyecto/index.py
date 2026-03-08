@@ -59,26 +59,35 @@ if st.session_state.vista == "inicio":
     st.markdown("Proyecto de ciencia de datos para analizar tendencias y gestión de inventario, con el objetivo de optimizar la rotación de productos y mejorar la eficiencia operativa.")
     st.image("Bodega.jpg", width="stretch")
 
-elif st.session_state.vista == "categorias":
-    st.subheader("Productos disponibles por categoría")
+#elif st.session_state.vista == "categorias":
+    #st.subheader("Productos disponibles por categoría")
     
-    # Filtro funcional
-    cat_seleccionada = st.selectbox("Seleccione la categoría", options=inventario["Category"].unique())
-    df_filtrado = inventario[inventario["Category"] == cat_seleccionada]
+    ## Filtro funcional
+    #cat_seleccionada = st.selectbox("Seleccione la categoría", options=inventario["Category"].unique())
+    #df_filtrado = inventario[inventario["Category"] == cat_seleccionada]
     
     # Gráfica corregida
-    fig = go.Figure()
+    #fig = go.Figure()
     # Usamos el dataframe filtrado para que la gráfica cambie según el selectbox
-    fig.add_trace(go.Bar(
-        x=df_filtrado["Product_Name"], 
-        y=df_filtrado["Quantity_On_Hand"] # Verifica si lleva espacio o no
-    ))
+    #fig.add_trace(go.Bar(
+        #x=df_filtrado["Product_Name"], 
+        #y=df_filtrado["Quantity_On_Hand"] # Verifica si lleva espacio o no
+    #))
     
-    fig.update_layout(title=f"Stock en {cat_seleccionada}", xaxis_title="Producto", yaxis_title="Cantidad")
-    st.plotly_chart(fig)
+    #fig.update_layout(title=f"Stock en {cat_seleccionada}", xaxis_title="Producto", yaxis_title="Cantidad")
+    #st.plotly_chart(fig)
 
 elif st.session_state.vista == "ventas":
-    st.subheader("Análisis de ventas por ubicación")
+    st.subheader("Análisis de ventas por ubicación (Unidades)")
+    df_sumaventas=inventario.groupby("Warehouse_Location")["Avg_Daily_Sales"].sum().reset_index()
+    fig = go.Figure()
+    fig.add_trace(go.Bar(
+        x=df_sumaventas["Warehouse_Location"], 
+        y=df_sumaventas["Avg_Daily_Sales"]
+    ))
+    fig.update_layout(title="Ventas diarias promedio por ubicación", xaxis_title="Ubicación", yaxis_title="Ventas Diarias Promedio")
+    st.plotly_chart(fig)
+    
     ubi_seleccionada = st.selectbox("Seleccione la ubicación", options=inventario["Warehouse_Location"].unique())
     df_filtrado_ubi = inventario[inventario["Warehouse_Location"] == ubi_seleccionada]
 
@@ -89,17 +98,6 @@ elif st.session_state.vista == "ventas":
         orientation="h"
     ))
     fig.update_layout(title=f"Ventas diarias promedio en {ubi_seleccionada}", xaxis_title="Ventas Diarias Promedio", yaxis_title="Categoría")
-    st.plotly_chart(fig)
-    
-    #Grafica de distribución de inventario por categoria
-    
-    fig = go.Figure()
-    fig.add_trace(go.Pie(
-        labels=df_filtrado_ubi["Category"], 
-        values=df_filtrado_ubi["Quantity_On_Hand"],
-        hole=0.4
-    ))
-    fig.update_layout(title=f"Distribución de inventario en {ubi_seleccionada}", xaxis_title="Categoría", yaxis_title="Cantidad")
     st.plotly_chart(fig)
 
 elif st.session_state.vista == "analisis":
@@ -113,7 +111,7 @@ elif st.session_state.vista == "analisis":
         x=df_filtrado_analisis["Days_of_Inventory"], 
         y=df_filtrado_analisis["Avg_Daily_Sales"],
         mode="markers",
-        text=inventario["Product_Name"]
+        text=df_filtrado_analisis["Product_Name"]
     ))
     fig.update_layout(title="Rotación de Inventario vs Ventas Diarias Promedio", xaxis_title="Días de Inventario", yaxis_title="Ventas Diarias Promedio")
     st.plotly_chart(fig)
@@ -121,13 +119,10 @@ elif st.session_state.vista == "analisis":
 elif st.session_state.vista =="proveedores":
     st.subheader("Tiempos de entrega por proveedor")
     ubi_seleccionada=st.selectbox("Seleccione ubicación para análisis", options=inventario["Warehouse_Location"].unique())
-    df_filtrado_proveedores = inventario[inventario["Warehouse_Location"] == ubi_seleccionada]
-    fig = go.Figure()
-    fig.add_trace(go.Bar(
-        x=df_filtrado_proveedores["Supplier_Name"], 
-        y=df_filtrado_proveedores["Lead_Time_Days"]
-    ))
-    fig.update_layout(title=f"Tiempos de entrega en {ubi_seleccionada}", xaxis_title="Proveedor", yaxis_title="Días de entrega")
+    cat_seleccionada_proveedores=st.selectbox("Seleccione categoría para análisis", options=inventario["Category"].unique())
+    df_filtrado_proveedores = inventario[(inventario["Warehouse_Location"] == ubi_seleccionada) & (inventario["Category"] == cat_seleccionada_proveedores)]
+    df_agrupado_proveedores = df_filtrado_proveedores.groupby("Supplier_Name")["Lead_Time_Days"].mean().reset_index()
+    fig = px.bar(df_agrupado_proveedores, x="Supplier_Name", y="Lead_Time_Days", title=f"Tiempos de entrega en {ubi_seleccionada} para {cat_seleccionada_proveedores}", labels={"Supplier_Name": "Proveedor", "Lead_Time_Days": "Días de entrega"})
     st.plotly_chart(fig)
 
 elif st.session_state.vista == "bodega":
@@ -143,7 +138,7 @@ elif st.session_state.vista == "bodega":
         (inventario["Warehouse_Location"] == ubicaciones_sel) & 
         (inventario["Category"] == categorias_sel)
     ]
-    st.dataframe(df_filtrado_bodega[["Product_Name", "Category", "Quantity_On_Hand", "Days_of_Inventory", "Inventory_Status","%_Variance_Audit"]])
+    st.dataframe(df_filtrado_bodega[["Product_Name", "Quantity_On_Hand", "Days_of_Inventory", "Inventory_Status","%_Variance_Audit"]])
     
     #Gestion del inventario en bodega
     st.subheader("Auditoria de inventario")
@@ -154,12 +149,29 @@ elif st.session_state.vista == "bodega":
                   value=f"{variacion_promedio:.2f}%",
                   delta=f"{variacion_promedio:.2f}%",
         )
+    with col2:
+        valor_total_inventario = df_filtrado_bodega["Total_Inventory_Value_USD"].sum()
+        st.metric("Valor total del inventario",
+                    value=f"${valor_total_inventario:,.2f}",
+            )
+      #Grafica de distribución de inventario por categoria
+    df_filtrado_ubi = inventario[inventario["Warehouse_Location"] == ubicaciones_sel]
+    fig = go.Figure()
+    fig.add_trace(go.Pie(
+        labels=df_filtrado_ubi["Category"], 
+        values=df_filtrado_ubi["Quantity_On_Hand"],
+        hole=0.4
+    ))
+    fig.update_layout(title=f"Distribución de inventario en {ubicaciones_sel}", xaxis_title="Categoría", yaxis_title="Cantidad")
+    st.plotly_chart(fig)
+    
 # 5. Barra lateral
 with st.sidebar:
     st.title("Navegación")
     st.button("Inicio", on_click=cambiar_vista, args=("inicio",))
-    st.button("Categorías", on_click=cambiar_vista, args=("categorias",))
+    st.button("Bodega", on_click=cambiar_vista, args=("bodega",))
+    #st.button("Categorías", on_click=cambiar_vista, args=("categorias",))
     st.button("Ventas", on_click=cambiar_vista, args=("ventas",))
     st.button("Análisis", on_click=cambiar_vista, args=("analisis",))
     st.button("Proveedores", on_click=cambiar_vista, args=("proveedores",))
-    st.button("Bodega", on_click=cambiar_vista, args=("bodega",))
+    

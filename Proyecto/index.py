@@ -90,11 +90,11 @@ elif st.session_state.vista == "ventas":
     
     ubi_seleccionada = st.selectbox("Seleccione la ubicación", options=inventario["Warehouse_Location"].unique())
     df_filtrado_ubi = inventario[inventario["Warehouse_Location"] == ubi_seleccionada]
-
+    df_filtrado_ubi_sum=df_filtrado_ubi.groupby("Category")["Avg_Daily_Sales"].sum().reset_index()
     fig = go.Figure()
     fig.add_trace(go.Bar(
-        x=df_filtrado_ubi["Avg_Daily_Sales"], 
-        y=df_filtrado_ubi["Category"],
+        x=df_filtrado_ubi_sum["Avg_Daily_Sales"], 
+        y=df_filtrado_ubi_sum["Category"],
         orientation="h"
     ))
     fig.update_layout(title=f"Ventas diarias promedio en {ubi_seleccionada}", xaxis_title="Ventas Diarias Promedio", yaxis_title="Categoría")
@@ -164,9 +164,16 @@ elif st.session_state.vista == "bodega":
     ))
     fig.update_layout(title=f"Distribución de inventario en {ubicaciones_sel}", xaxis_title="Categoría", yaxis_title="Cantidad")
     st.plotly_chart(fig)
-    
+
+elif st.session_state.vista == "conclusiones":
+    st.subheader("Conclusiones y recomendaciones")
+    st.markdown("**1)** **Optimización de inventario**: Se recomienda implementar un sistema de gestión de inventario basado en la rotación de productos, priorizando aquellos con mayor demanda y menor tiempo de almacenamiento.")
+    st.markdown("**2)** **Revisión de proveedores**: Es crucial evaluar el desempeño de los proveedores en términos de tiempos de entrega y calidad, para asegurar una cadena de suministro eficiente.")
+    st.markdown("**3)** **Análisis continuo**: Se sugiere realizar análisis periódicos del inventario y las ventas para identificar tendencias y ajustar las estrategias de compra y almacenamiento.")
+    st.markdown("**4)** **Capacitación del personal**: Es importante capacitar al personal de la bodega en prácticas de gestión de inventario y auditoría para reducir las variaciones y mejorar la precisión de los registros.")
+    st.markdown("**5)** **Implementación de tecnología**: Considerar la implementación de tecnologías como sistemas de gestión de inventario (IMS) o software de análisis para mejorar la visibilidad y el control del inventario en tiempo real.")
 # 5. Barra lateral
-with st.sidebar:
+with st.sidebar:    
     st.title("Navegación")
     st.button("Inicio", on_click=cambiar_vista, args=("inicio",))
     st.button("Bodega", on_click=cambiar_vista, args=("bodega",))
@@ -174,4 +181,4 @@ with st.sidebar:
     st.button("Ventas", on_click=cambiar_vista, args=("ventas",))
     st.button("Análisis", on_click=cambiar_vista, args=("analisis",))
     st.button("Proveedores", on_click=cambiar_vista, args=("proveedores",))
-    
+    st.button("Conclusiones", on_click=cambiar_vista, args=("conclusiones",))

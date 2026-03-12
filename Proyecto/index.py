@@ -5,15 +5,17 @@ import plotly.graph_objects as go
 import plotly.express as px
 import seaborn as sns
 import streamlit as st
-
+import os
 
 # Configuracion página
 st.set_page_config(page_title="Analisis de inventario actual", page_icon=":bar_chart:", layout="centered")
+base_path = os.path.dirname(__file__)
 @st.cache_data
 
 #Cargar datos
 def cargar_datos():
-    inventario = pd.read_csv("Inventario.csv")
+    csv_path = os.path.join(base_path, "Inventario.csv")
+    inventario = pd.read_csv(csv_path)
     #Limpienza de columnas
     inventario.drop(columns=["Batch_ID","SKU_Churn_Rate","FIFO_FEFO","Count_Variance","Audit_Date","Notes","Demand_Forecast_Accuracy_Pct","Last_Purchase_Date","Expiry_Date"],inplace=True)
     inventario.drop(columns=["SKU_ID","Supplier_ID","Warehouse_ID","Last_Purchase_Price_USD","Received_Date","Supplier_OnTime_Pct"],inplace=True)

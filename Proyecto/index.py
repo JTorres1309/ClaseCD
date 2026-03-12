@@ -7,11 +7,6 @@ import seaborn as sns
 import streamlit as st
 
 
-imagen="Bodega.jpg"
-imagen1=plt.imread(imagen)
-plt.imshow(imagen1)
-plt.axis("off")
-
 # Configuracion página
 st.set_page_config(page_title="Analisis de inventario actual", page_icon=":bar_chart:", layout="centered")
 @st.cache_data

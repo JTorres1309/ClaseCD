@@ -175,10 +175,10 @@ elif st.session_state.vista == "conclusiones":
 # 5. Barra lateral
 with st.sidebar:    
     st.title("Navegación")
-    st.button("Inicio", on_click=cambiar_vista, args=("inicio",))
-    st.button("Bodega", on_click=cambiar_vista, args=("bodega",))
-    #st.button("Categorías", on_click=cambiar_vista, args=("categorias",))
-    st.button("Ventas", on_click=cambiar_vista, args=("ventas",))
-    st.button("Análisis", on_click=cambiar_vista, args=("analisis",))
-    st.button("Proveedores", on_click=cambiar_vista, args=("proveedores",))
-    st.button("Conclusiones", on_click=cambiar_vista, args=("conclusiones",))
+    st.button(":house: Inicio", on_click=cambiar_vista, args=("inicio",))
+    st.button(":package: Bodega", on_click=cambiar_vista, args=("bodega",))
+    #st.button(":file_folder: Categorías", on_click=cambiar_vista, args=("categorias",))
+    st.button(":bar_chart: Ventas", on_click=cambiar_vista, args=("ventas",))
+    st.button(":chart_with_upwards_trend: Análisis", on_click=cambiar_vista, args=("analisis",))
+    st.button(":truck: Proveedores", on_click=cambiar_vista, args=("proveedores",))
+    st.button(":white_check_mark: Conclusiones", on_click=cambiar_vista, args=("conclusiones",))

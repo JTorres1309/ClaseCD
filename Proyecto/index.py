@@ -54,7 +54,8 @@ def cambiar_vista(nueva_vista):
 if st.session_state.vista == "inicio":
     st.title("Inventario de la bodega", anchor="center")
     st.markdown("Proyecto de ciencia de datos para analizar tendencias y gestión de inventario, con el objetivo de optimizar la rotación de productos y mejorar la eficiencia operativa.")
-    st.image("Bodega.jpg", width="stretch")
+    ruta_imagen = os.path.join(base_path, "Bodega.jpg")
+    st.image(ruta_imagen, use_container_width=True)
 
 #elif st.session_state.vista == "categorias":
     #st.subheader("Productos disponibles por categoría")
